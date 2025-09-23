@@ -1,0 +1,9 @@
+name = "genesys-todo-worker"
+main = "src/index.js"
+compatibility_date = "2024-03-29"
+
+[pages]
+build_output_dir = "./"
+
+[pages.domains]
+production = "todoworker.abundo.dev"
