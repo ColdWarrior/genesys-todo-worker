@@ -24,3 +24,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: "genesys-todo-worker"
           directory: "./src"
+          # This line tells the action to use your wrangler.toml file
+          configurationPath: "wrangler.toml"
