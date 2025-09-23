@@ -4,6 +4,10 @@ compatibility_date = "2024-03-29"
 
 [pages]
 build_output_dir = "./"
+compatibility_date = "2024-03-29"
 
 [pages.domains]
 production = "todoworker.abundo.dev"
+
+[pages.domains.zone]
+id = "bb52fca0ba5b2ef5fcf914b08733a904"
