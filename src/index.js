@@ -51,12 +51,32 @@ async function updateConversationAttribute(conversationId, accessToken) {
   }
 }
 
+// Basic Authentication
+function authorize(request, env) {
+  const authHeader = request.headers.get('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return false;
+  }
+
+  const encoded = authHeader.substring(6);
+  const decoded = atob(encoded);
+  const [username, password] = decoded.split(':');
+
+  return username === env.BASIC_AUTH_USERNAME && password === env.BASIC_AUTH_PASSWORD;
+}
+
 // The main Worker fetch handler
 export default {
   async fetch(request, env) {
     // We only want to handle POST requests from the webhook
     if (request.method !== 'POST') {
       return new Response("Only POST requests are accepted.", { status: 405 });
+    }
+
+    // Authenticate the request
+    if (!authorize(request, env)) {
+      return new Response('Unauthorized.', { status: 401 });
     }
 
     try {
