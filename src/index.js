@@ -72,16 +72,15 @@ function authorize(request, env) {
 
 // Genesys Cloud US East CIDR ranges
 const ALLOWED_GENESYS_CLOUD_IPS = [
-    // Media/Voice Services (Core/Satellite)
+    // Media/Voice Services (Core/Satellite) - Genesys-owned ranges
     '52.129.96.0/20', 
     '169.150.104.0/21',
     '167.234.48.0/20',
     '136.245.64.0/18',
     
     // AWS us-east-1 (N. Virginia) Public IP Ranges (Required for Data Actions)
-    // NOTE: This is not a complete list of AWS IPs, but covers the general ranges
-    // used by Genesys Cloud's Public API/Data Actions in this region.
-    '18.212.0.0/15', // Includes the 18.214.48.52 IP you observed!
+    '18.212.0.0/15',    // Covers the previous blocked IP (18.214.48.52)
+    '52.192.0.0/12',    // **NEW RANGE** - Covers the current blocked IP (52.201.10.219)
     '3.208.0.0/12',
     '3.232.0.0/14',
     '3.250.0.0/15',
@@ -90,7 +89,7 @@ const ALLOWED_GENESYS_CLOUD_IPS = [
     '54.80.0.0/12',
     '54.197.0.0/16', 
     '54.204.0.0/16',
-    '64.252.176.0/20' // Older Genesys specific range
+    '64.252.176.0/20' 
 ]; 
 
 // Helper function to convert an IP address string to a number (32-bit integer)
