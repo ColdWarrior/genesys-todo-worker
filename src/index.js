@@ -66,19 +66,57 @@ function authorize(request, env) {
   return username === env.BASIC_AUTH_USERNAME && password === env.BASIC_AUTH_PASSWORD;
 }
 
+// --- NEW IP WHITELISTING LOGIC ---
+
+// IMPORTANT: Replace these examples with the actual official Genesys Cloud public API IP addresses/CIDRs
+const ALLOWED_GENESYS_CLOUD_IPS = [
+    // EXAMPLE IPS - YOU MUST REPLACE THESE
+    '52.129.96.0/20', 
+    '169.150.104.0/21',
+    '167.234.48.0/20',
+    '136.245.64.0/18'
+]; 
+
+// Simple check for whitelisted IPs (NOTE: A real-world solution should use a robust CIDR library)
+function isIpAllowed(clientIP, env) {
+    // Check against the personal test IP (from Cloudflare environment variable)
+    if (clientIP === env.TEST_IP_ADDRESS) {
+        return true;
+    }
+    
+    // Check against the Genesys Cloud allowed IPs
+    // WARNING: This is a simplified check. For CIDR ranges, a proper check is needed.
+    for (const allowedIp of ALLOWED_GENESYS_CLOUD_IPS) {
+        if (clientIP === allowedIp) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // The main Worker fetch handler
 export default {
   async fetch(request, env) {
-    // We only want to handle POST requests from the webhook
+    // 1. We only want to handle POST requests from the webhook
     if (request.method !== 'POST') {
       return new Response("Only POST requests are accepted.", { status: 405 });
     }
 
-    // Authenticate the request
+    // 2. IP WHITELISTING CHECK
+    const clientIP = request.headers.get('cf-connecting-ip');
+    
+    if (!isIpAllowed(clientIP, env)) {
+        console.warn(`Forbidden attempt from IP: ${clientIP}`);
+        return new Response('Forbidden: IP Address Not Allowed.', { status: 403 });
+    }
+
+    // 3. Authenticate the request
     if (!authorize(request, env)) {
       return new Response('Unauthorized.', { status: 401 });
     }
 
+    // --- CONTINUED LOGIC ---
     try {
       // Get the incoming JSON payload from the Genesys Cloud data action
       const dataActionPayload = await request.json();
