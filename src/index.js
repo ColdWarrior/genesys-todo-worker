@@ -66,34 +66,54 @@ function authorize(request, env) {
   return username === env.BASIC_AUTH_USERNAME && password === env.BASIC_AUTH_PASSWORD;
 }
 
-// --- NEW IP WHITELISTING LOGIC ---
+// -----------------------------------------------------------
+// --- CIDR IP WHITELISTING LOGIC ---
+// -----------------------------------------------------------
 
-// IMPORTANT: Replace these examples with the actual official Genesys Cloud public API IP addresses/CIDRs
+// Genesys Cloud US East CIDR ranges
 const ALLOWED_GENESYS_CLOUD_IPS = [
-    // EXAMPLE IPS - YOU MUST REPLACE THESE
     '52.129.96.0/20', 
     '169.150.104.0/21',
     '167.234.48.0/20',
     '136.245.64.0/18'
 ]; 
 
-// Simple check for whitelisted IPs (NOTE: A real-world solution should use a robust CIDR library)
+// Helper function to convert an IP address string to a number (32-bit integer)
+function ipToNum(ip) {
+    return ip.split('.').reduce((num, octet) => (num << 8) + parseInt(octet, 10), 0) >>> 0;
+}
+
+// Core function to check if a single IP falls within a CIDR range
+function checkCidr(ip, cidr) {
+    const [range, bits] = cidr.split('/');
+    const mask = ~(0xFFFFFFFF >>> parseInt(bits, 10));
+
+    const ipNum = ipToNum(ip);
+    const rangeNum = ipToNum(range);
+    
+    return (ipNum & mask) === (rangeNum & mask);
+}
+
+// Main IP check function
 function isIpAllowed(clientIP, env) {
-    // Check against the personal test IP (from Cloudflare environment variable)
+    // 1. Check against the personal test IP (from Cloudflare environment variable)
     if (clientIP === env.TEST_IP_ADDRESS) {
         return true;
     }
     
-    // Check against the Genesys Cloud allowed IPs
-    // WARNING: This is a simplified check. For CIDR ranges, a proper check is needed.
-    for (const allowedIp of ALLOWED_GENESYS_CLOUD_IPS) {
-        if (clientIP === allowedIp) {
+    // 2. Check against the Genesys Cloud allowed IPs (CIDR ranges)
+    for (const cidr of ALLOWED_GENESYS_CLOUD_IPS) {
+        if (checkCidr(clientIP, cidr)) {
             return true;
         }
     }
 
     return false;
 }
+
+// -----------------------------------------------------------
+// --- END CIDR IP WHITELISTING LOGIC ---
+// -----------------------------------------------------------
 
 // The main Worker fetch handler
 export default {
@@ -103,7 +123,7 @@ export default {
       return new Response("Only POST requests are accepted.", { status: 405 });
     }
 
-    // 2. IP WHITELISTING CHECK
+    // 2. IP WHITELISTING CHECK (Genesys Cloud CIDR and Test IP)
     const clientIP = request.headers.get('cf-connecting-ip');
     
     if (!isIpAllowed(clientIP, env)) {
@@ -111,8 +131,12 @@ export default {
         return new Response('Forbidden: IP Address Not Allowed.', { status: 403 });
     }
 
-    // 3. Authenticate the request
+    // 3. Authenticate the request (Primary Defense)
     if (!authorize(request, env)) {
+      // NOTE: We don't check for the TEST_IP_ADDRESS here because 
+      // the IP is already allowed above. If the TEST_IP is active 
+      // but doesn't have the correct Basic Auth, it fails here 
+      // like any other authorized IP.
       return new Response('Unauthorized.', { status: 401 });
     }
 
