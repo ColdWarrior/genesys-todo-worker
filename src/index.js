@@ -134,7 +134,12 @@ export default {
   async fetch(request, env) {
     // 1. We only want to handle POST requests from the webhook
     if (request.method !== 'POST') {
-      return new Response("Only POST requests are accepted.", { status: 405 });
+	  return new Response(JSON.stringify({ message: "Only POST requests are accepted." }), {
+		  status: 405,
+		  headers: {
+			  'Content-Type': 'application/json'
+		  }
+	  });
     }
 
     // 2. IP WHITELISTING CHECK (Genesys Cloud CIDR and Test IP)
@@ -142,7 +147,12 @@ export default {
     
     if (!isIpAllowed(clientIP, env)) {
         console.warn(`Forbidden attempt from IP: ${clientIP}`);
-        return new Response('Forbidden: IP Address Not Allowed.', { status: 403 });
+		return new Response(JSON.stringify({ message: "Forbidden: IP Address Not Allowed." }), {
+		  status: 403,
+		  headers: {
+			  'Content-Type': 'application/json'
+		  }
+	    });
     }
 
     // 3. Authenticate the request (Primary Defense)
@@ -151,7 +161,12 @@ export default {
       // the IP is already allowed above. If the TEST_IP is active 
       // but doesn't have the correct Basic Auth, it fails here 
       // like any other authorized IP.
-      return new Response('Unauthorized.', { status: 401 });
+	  return new Response(JSON.stringify({ message: "Unauthorized." }), {
+		  status: 401,
+		  headers: {
+			  'Content-Type': 'application/json'
+		  }
+	  });
     }
 
     // --- CONTINUED LOGIC ---
@@ -188,7 +203,12 @@ export default {
 
     } catch (error) {
       console.error("Data action processing error:", error);
-      return new Response("Data action processing failed.", { status: 500 });
+	  return new Response(JSON.stringify({ message: "Data action processing failed." }), {
+		  status: 500,
+		  headers: {
+			  'Content-Type': 'application/json'
+		  }
+	  });
     }
   },
 };
