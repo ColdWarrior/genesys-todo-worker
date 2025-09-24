@@ -92,7 +92,7 @@ const ALLOWED_GENESYS_CLOUD_IPS = [
     '54.197.0.0/16', 
     '54.204.0.0/16',
     '64.252.176.0/20' 
-];
+]; 
 
 // Helper function to convert an IP address string to a number (32-bit integer)
 function ipToNum(ip) {
