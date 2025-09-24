@@ -178,7 +178,13 @@ export default {
       }
 
       // Return a successful response to Genesys Cloud
-      return new Response("Webhook processed successfully!", { status: 200 });
+      // Return a successful response to Genesys Cloud with correct JSON header
+	  return new Response(JSON.stringify({ message: "Webhook processed successfully!" }), {
+		  status: 200,
+		  headers: {
+			  'Content-Type': 'application/json'
+		  }
+	  });
 
     } catch (error) {
       console.error("Data action processing error:", error);
