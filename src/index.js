@@ -195,8 +195,8 @@ export default {
 			body: JSON.stringify({
 				"name": workitemName,
 				"description": workitemDescription,
-				"type": { "id": env.WORKITEM_TYPE_ID }, 
-				"queue": { "id": env.WORKITEM_QUEUE_ID }, 
+				"type": { "id": workitemTypeId }, 
+				"queue": { "id": queueId }, 
 				"status": { "id": "Open" }
 			}),
 		};
