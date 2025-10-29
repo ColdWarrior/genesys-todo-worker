@@ -215,7 +215,7 @@ export default {
 
     // --- CONTINUED LOGIC ---
     try {
-      // [Existing security checks remain here]
+		// [Existing security checks remain here]
 
         const payload = await request.json();
         const conversationId = payload.eventBody.conversationId;
@@ -284,16 +284,6 @@ export default {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
         });
-    }
-
-    } catch (error) {
-      console.error("Data action processing error:", error);
-	  return new Response(JSON.stringify({ message: "Data action processing failed." }), {
-		  status: 500,
-		  headers: {
-			  'Content-Type': 'application/json'
-		  }
-	  });
     }
   },
 };
