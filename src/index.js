@@ -193,7 +193,24 @@ export default {
 			"status": { "id": "Open" }
 		});
 
-		// ... [Rest of the fetch logic for createWorkitem] ...
+		const requestOptions = {
+        method: "POST",
+        headers: headers,
+        body: body,
+		};
+
+		try {
+			const response = await fetch(url, requestOptions);
+			const data = await response.json();
+			
+			if (!response.ok) {
+				console.error("Failed to create Workitem:", await response.text());
+			} else {
+				console.log(`Successfully created Workitem: ${data.id}`);
+			}
+		} catch (error) {
+			console.error("Error creating Workitem:", error);
+		}
 	}
 
     // --- CONTINUED LOGIC ---
