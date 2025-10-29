@@ -189,7 +189,7 @@ export default {
 		headers.append("Authorization", `Bearer ${accessToken}`);
 
 		const body = JSON.stringify({
-			"name": 	,
+			"name": workitemName,
 			"description": workitemDescription,
 			"type": { "id": workitemTypeId }, 
 			"queue": { "id": queueId }, 
