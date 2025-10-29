@@ -172,11 +172,11 @@ export default {
     }
 	
 	// --- NEW UTILITY FUNCTION: Workitem Creation (Add this to your Worker) ---
-	async function createWorkitem(conversationId, triggerText, accessToken) {
-		// NOTE: Replace 'YOUR_WORKITEM_TYPE_ID' and 'YOUR_QUEUE_ID' 
-		// with actual IDs from your Genesys Cloud Task Management setup.
-		const workitemName = `Follow-up needed: ${conversationId}`;
-		const workitemDescription = `Agent used the phrase: "${triggerText}". Review full transcript for action.`;
+	async function createWorkitem(conversationId, triggerText, accessToken, env) {
+		// You must replace these placeholders with the actual IDs from your Genesys Cloud setup
+		// (See Step 1 and Step 2 in the previous instructions for obtaining these IDs)
+		const workitemTypeId = env.WORKITEM_TYPE_ID; // Use ENV variable for secure ID storage
+		const queueId = env.WORKITEM_QUEUE_ID;       // Use ENV variable for secure ID storage
 
 		// Genesys Cloud API Endpoint for Workitems
 		const url = `https://api.mypurecloud.com/api/v2/taskmanagement/workitems`; 
@@ -188,9 +188,9 @@ export default {
 		const body = JSON.stringify({
 			"name": workitemName,
 			"description": workitemDescription,
-			"type": { "id": "WORKITEM_TYPE_ID" }, 
-			"queue": { "id": "WORKITEM_QUEUE_ID" }, 
-			"status": { "id": "Open" }
+			"type": { "id": workitemTypeId }, 
+			"queue": { "id": queueId }, 
+			"status": { "id": "Open" } // Default status
 		});
 
 		const requestOptions = {
