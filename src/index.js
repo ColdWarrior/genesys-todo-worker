@@ -176,14 +176,15 @@ export default {
       // ... (Security checks and payload parsing remain here) ...
 
             const payload = await request.json();
-            const conversationId = payload.conversationId;
-            const rawTranscript = payload.message;
+            const conversationId = payload.eventBody.conversationId;
+            const rawTranscript = payload.eventBody.message.body;
             
             // Define your trigger phrase and the new agent identifier
             const triggerPhrase = "i'll follow up on that";
             const agentIdentifier = "agent";
 
-            let transcriptArray;
+            let transcriptArray = [];
+			
             try {
                 // The 'message' field is a JSON string of the transcript array, so we parse it again
                 transcriptArray = JSON.parse(rawTranscript);
