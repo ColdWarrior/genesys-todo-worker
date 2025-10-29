@@ -188,8 +188,8 @@ export default {
 		const body = JSON.stringify({
 			"name": workitemName,
 			"description": workitemDescription,
-			"type": { "id": "49fe6cd1-c5db-4bfd-b66f-8bc9582b43fa" }, 
-			"queue": { "id": "d5b4b995-a49d-4163-a1d7-b62253988a96" }, 
+			"type": { "id": "WORKITEM_TYPE_ID" }, 
+			"queue": { "id": "WORKITEM_QUEUE_ID" }, 
 			"status": { "id": "Open" }
 		});
 
