@@ -188,31 +188,32 @@ export default {
 		headers.append("Content-Type", "application/json");
 		headers.append("Authorization", `Bearer ${accessToken}`);
 
-		const body = JSON.stringify({
-			"name": workitemName,
-			"description": workitemDescription,
-			"type": { "id": workitemTypeId }, 
-			"queue": { "id": queueId }, 
-			"status": { "id": "Open" } // Default status
-		});
-
 		const requestOptions = {
-        method: "POST",
-        headers: headers,
-        body: body,
+			method: "POST",
+			headers: headers,
+			// Define the body object directly in the request options
+			body: JSON.stringify({
+				"name": workitemName,
+				"description": workitemDescription,
+				"type": { "id": env.WORKITEM_TYPE_ID }, 
+				"queue": { "id": env.WORKITEM_QUEUE_ID }, 
+				"status": { "id": "Open" }
+			}),
 		};
 
 		try {
 			const response = await fetch(url, requestOptions);
-			const data = await response.json();
 			
 			if (!response.ok) {
-				console.error("Failed to create Workitem:", await response.text());
+				const errorBody = await response.text(); 
+				// Log the API error (e.g., 403 Forbidden due to missing permission, or 400 Bad Request)
+				console.error(`Failed to create Workitem. Status: ${response.status}. Body: ${errorBody}`);
 			} else {
+				const data = await response.json();
 				console.log(`Successfully created Workitem: ${data.id}`);
 			}
 		} catch (error) {
-			console.error("Error creating Workitem:", error);
+			console.error("Error communicating with Workitem API:", error);
 		}
 	}
 
