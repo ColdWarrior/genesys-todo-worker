@@ -177,7 +177,10 @@ export default {
 		// (See Step 1 and Step 2 in the previous instructions for obtaining these IDs)
 		const workitemTypeId = env.WORKITEM_TYPE_ID; // Use ENV variable for secure ID storage
 		const queueId = env.WORKITEM_QUEUE_ID;       // Use ENV variable for secure ID storage
-
+		
+		const workitemName = `Follow-up needed: Conversation ${conversationId}`; 
+		const workitemDescription = `Agent used the phrase: "${triggerText}". Review full transcript for action.`;
+	
 		// Genesys Cloud API Endpoint for Workitems
 		const url = `https://api.mypurecloud.com/api/v2/taskmanagement/workitems`; 
 
@@ -186,7 +189,7 @@ export default {
 		headers.append("Authorization", `Bearer ${accessToken}`);
 
 		const body = JSON.stringify({
-			"name": workitemName,
+			"name": 	,
 			"description": workitemDescription,
 			"type": { "id": workitemTypeId }, 
 			"queue": { "id": queueId }, 
