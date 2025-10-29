@@ -6,3 +6,13 @@ compatibility_flags = ["nodejs_compat"]
 [[routes]]
 pattern = "todoworker.abundo.dev/*"
 zone_id = "bb52fca0ba5b2ef5fcf914b08733a904" # Your domain's Zone ID
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
