@@ -173,35 +173,53 @@ export default {
 
     // --- CONTINUED LOGIC ---
     try {
-      // Get the incoming JSON payload from the Genesys Cloud data action
-      const dataActionPayload = await request.json();
-      
-      // Extract the conversationId and message from the data action payload
-      const conversationId = dataActionPayload.eventBody.conversationId;
-      const message = dataActionPayload.eventBody.message.body;
+      // ... (Security checks and payload parsing remain here) ...
 
-      // Define your trigger phrase
-      const triggerPhrase = "i'll follow up on that";
+            const payload = await request.json();
+            const conversationId = payload.conversationId;
+            const rawTranscript = payload.message;
+            
+            // Define your trigger phrase and the new agent identifier
+            const triggerPhrase = "i'll follow up on that";
+            const agentIdentifier = "agent";
 
-      // Check if the message contains the trigger phrase
-      if (message && message.toLowerCase().includes(triggerPhrase.toLowerCase())) {
-        // Get an access token using your client credentials
-        const accessToken = await getAccessToken(env);
+            let transcriptArray;
+            try {
+                // The 'message' field is a JSON string of the transcript array, so we parse it again
+                transcriptArray = JSON.parse(rawTranscript);
+            } catch (e) {
+                console.error("Failed to parse transcript JSON string:", e);
+                return new Response(JSON.stringify({ message: "Invalid transcript format." }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+            }
 
-        if (accessToken) {
-          // Update the conversation with the custom attribute
-          await updateConversationAttribute(conversationId, accessToken);
-        }
-      }
+            // Loop through the transcript to find ALL matching instances from the Agent
+            for (const message of transcriptArray) {
+                
+                // 1. Check if the device is the reliable 'agent' identifier
+                // 2. Check if the text contains the trigger phrase
+                if (message.device === agentIdentifier && 
+                    message.text && // Ensure message.text exists
+                    message.text.toLowerCase().includes(triggerPhrase.toLowerCase())) {
+                    
+                    // Get an access token using your client credentials
+                    const accessToken = await getAccessToken(env);
+                    
+                    if (accessToken) {
+                        // Create Workitem for every instance found
+                        await createWorkitem(conversationId, message.text, accessToken);
+                        // No break statement, so the loop continues to find the next instance
+                    } else {
+                        console.error("Failed to obtain access token. Skipping workitem creation.");
+                        // We continue the loop but log the failure
+                    }
+                }
+            }
 
-      // Return a successful response to Genesys Cloud
-      // Return a successful response to Genesys Cloud with correct JSON header
-	  return new Response(JSON.stringify({ message: "Webhook processed successfully!" }), {
-		  status: 200,
-		  headers: {
-			  'Content-Type': 'application/json'
-		  }
-	  });
+            // Return a successful response
+            return new Response(JSON.stringify({ message: "Transcript processed successfully!" }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
 
     } catch (error) {
       console.error("Data action processing error:", error);
