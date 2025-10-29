@@ -215,54 +215,76 @@ export default {
 
     // --- CONTINUED LOGIC ---
     try {
-      // ... (Security checks and payload parsing remain here) ...
+      // [Existing security checks remain here]
 
-            const payload = await request.json();
-            const conversationId = payload.eventBody.conversationId;
-            const rawTranscript = payload.eventBody.message.body;
-            
-            // Define your trigger phrase and the new agent identifier
-            const triggerPhrase = "i'll follow up on that";
-            const agentIdentifier = "agent";
+        const payload = await request.json();
+        const conversationId = payload.eventBody.conversationId;
+        const rawTranscript = payload.eventBody.message.body; 
+        
+        // --- NEW DEBUG LOGS START ---
+        console.log(`Processing Conversation ID: ${conversationId}`);
 
-            let transcriptArray = [];
-			
-            try {
-                // The 'message' field is a JSON string of the transcript array, so we parse it again
-                transcriptArray = JSON.parse(rawTranscript);
-            } catch (e) {
-                console.error("Failed to parse transcript JSON string:", e);
-                return new Response(JSON.stringify({ message: "Invalid transcript format." }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-            }
+        const triggerPhrase = "i'll follow up on that";
+        const agentIdentifier = "agent"; 
+        let transcriptArray = [];
 
-            // Loop through the transcript to find ALL matching instances from the Agent
-            for (const message of transcriptArray) {
-                
-                // 1. Check if the device is the reliable 'agent' identifier
-                // 2. Check if the text contains the trigger phrase
-                if (message.device === agentIdentifier && 
-                    message.text && // Ensure message.text exists
-                    message.text.toLowerCase().includes(triggerPhrase.toLowerCase())) {
-                    
-                    // Get an access token using your client credentials
-                    const accessToken = await getAccessToken(env);
-                    
-                    if (accessToken) {
-                        // Create Workitem for every instance found
-                        await createWorkitem(conversationId, message.text, accessToken);
-                        // No break statement, so the loop continues to find the next instance
-                    } else {
-                        console.error("Failed to obtain access token. Skipping workitem creation.");
-                        // We continue the loop but log the failure
-                    }
-                }
-            }
-
-            // Return a successful response
-            return new Response(JSON.stringify({ message: "Transcript processed successfully!" }), {
-                status: 200,
+        try {
+            transcriptArray = JSON.parse(rawTranscript);
+            console.log(`Successfully parsed transcript with ${transcriptArray.length} messages.`);
+        } catch (e) {
+            console.error("Parsing Failed. Returning 400.");
+            return new Response(JSON.stringify({ message: "Invalid transcript format. Check Data Action mapping." }), {
+                status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
+        }
+        
+        let workitemCreatedCount = 0;
+
+        // Loop through the transcript
+        for (const message of transcriptArray) {
+            
+            // Log every agent message to see if the device check is working
+            if (message.device === agentIdentifier) {
+                 console.log(`Found AGENT message: ${message.text}`);
+            }
+
+            // The logic: 1. Is it the agent? 2. Does it contain the phrase?
+            if (message.device === agentIdentifier && 
+                message.text && 
+                message.text.toLowerCase().includes(triggerPhrase.toLowerCase())) {
+                
+                console.log("--- TRIGGER PHRASE FOUND. ATTEMPTING TOKEN AND WORKITEM CREATION. ---");
+                
+                const accessToken = await getAccessToken(env);
+                
+                if (accessToken) {
+                    // Create Workitem for every instance found
+                    await createWorkitem(conversationId, message.text, accessToken, env);
+                    workitemCreatedCount++;
+                    console.log(`WORKITEM CREATED COUNT: ${workitemCreatedCount}`);
+                } else {
+                    console.error("TOKEN FAILURE: Skipping workitem creation for matches.");
+                }
+            }
+        }
+
+        // Final result log
+        console.log(`Processing complete. Total Workitems created: ${workitemCreatedCount}`);
+
+        // Return a successful response
+        return new Response(JSON.stringify({ message: `Transcript processed. Created ${workitemCreatedCount} workitems.` }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+    } catch (error) {
+        console.error("Worker processing error:", error.stack);
+        return new Response(JSON.stringify({ message: "Processing failed.", error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
 
     } catch (error) {
       console.error("Data action processing error:", error);
