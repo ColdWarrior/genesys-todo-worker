@@ -170,6 +170,31 @@ export default {
 		  }
 	  });
     }
+	
+	// --- NEW UTILITY FUNCTION: Workitem Creation (Add this to your Worker) ---
+	async function createWorkitem(conversationId, triggerText, accessToken) {
+		// NOTE: Replace 'YOUR_WORKITEM_TYPE_ID' and 'YOUR_QUEUE_ID' 
+		// with actual IDs from your Genesys Cloud Task Management setup.
+		const workitemName = `Follow-up needed: ${conversationId}`;
+		const workitemDescription = `Agent used the phrase: "${triggerText}". Review full transcript for action.`;
+
+		// Genesys Cloud API Endpoint for Workitems
+		const url = `https://api.mypurecloud.com/api/v2/taskmanagement/workitems`; 
+
+		const headers = new Headers();
+		headers.append("Content-Type", "application/json");
+		headers.append("Authorization", `Bearer ${accessToken}`);
+
+		const body = JSON.stringify({
+			"name": workitemName,
+			"description": workitemDescription,
+			"type": { "id": "YOUR_WORKITEM_TYPE_ID" }, 
+			"queue": { "id": "YOUR_QUEUE_ID" }, 
+			"status": { "id": "Open" }
+		});
+
+		// ... [Rest of the fetch logic for createWorkitem] ...
+	}
 
     // --- CONTINUED LOGIC ---
     try {
