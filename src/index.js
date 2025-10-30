@@ -229,7 +229,7 @@ export default {
         // --- NEW DEBUG LOGS START ---
         console.log(`Processing Conversation ID: ${conversationId}`);
 
-        const triggerPhrase = "i'll follow up on that";
+        const triggerPhrase = "follow up";
         const agentIdentifier = "agent"; 
         let transcriptArray = [];
 
