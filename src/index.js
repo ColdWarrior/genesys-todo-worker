@@ -228,8 +228,16 @@ export default {
         
         // --- NEW DEBUG LOGS START ---
         console.log(`Processing Conversation ID: ${conversationId}`);
+		
+		// --- NEW: Array of multiple trigger phrases ---
+		const TRIGGER_PHRASES = [
+			"follow up",
+			"get back to you",
+			"noted on",
+			"make that update",
+			"take note"
+		];
 
-        const triggerPhrase = "follow up";
         const agentIdentifier = "agent"; 
         let transcriptArray = [];
 
@@ -249,29 +257,34 @@ export default {
         // Loop through the transcript
         for (const message of transcriptArray) {
             
-            // Log every agent message to see if the device check is working
-            if (message.device === agentIdentifier) {
-                 console.log(`Found AGENT message: ${message.text}`);
-            }
+			if (message.device === agentIdentifier && message.text) {
+            
+				// Convert message text once for efficiency
+				const currentMessageText = message.text.toLowerCase();
 
-            // The logic: 1. Is it the agent? 2. Does it contain the phrase?
-            if (message.device === agentIdentifier && 
-                message.text && 
-                message.text.toLowerCase().includes(triggerPhrase.toLowerCase())) {
-                
-                console.log("--- TRIGGER PHRASE FOUND. ATTEMPTING TOKEN AND WORKITEM CREATION. ---");
-                
-                const accessToken = await getAccessToken(env);
-                
-                if (accessToken) {
-                    // Create Workitem for every instance found
-                    await createWorkitem(conversationId, message.text, accessToken, env);
-                    workitemCreatedCount++;
-                    console.log(`WORKITEM CREATED COUNT: ${workitemCreatedCount}`);
-                } else {
-                    console.error("TOKEN FAILURE: Skipping workitem creation for matches.");
-                }
-            }
+				// Check if the current message contains ANY of the trigger phrases
+				for (const phrase of TRIGGER_PHRASES) {
+					
+					if (currentMessageText.includes(phrase.toLowerCase())) {
+						
+						// --- TRIGGER PHRASE MATCH FOUND ---
+						console.log("--- TRIGGER PHRASE FOUND. ATTEMPTING TOKEN AND WORKITEM CREATION. ---");
+						const accessToken = await getAccessToken(env);
+						
+						if (accessToken) {
+							// Create Workitem for this specific match. 
+							// The description can include the exact phrase that triggered it.
+							const specificTriggerText = `Phrase: "${phrase}"`; 
+							await createWorkitem(conversationId, specificTriggerText, accessToken, env);
+							workitemCreatedCount++;
+						} else {
+							console.error("TOKEN FAILURE: Skipping workitem creation for matches.");
+							// Continue loop
+						}
+					}
+				}
+			}
+ 
         }
 
         // Final result log
